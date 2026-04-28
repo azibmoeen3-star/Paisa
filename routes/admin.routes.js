@@ -4,6 +4,7 @@ const {
   listUsers,
   listDepositRequests,
   approveDeposit,
+  rejectDeposit,
   listWithdrawRequests,
   getWithdrawDetails,
   approveWithdraw,
@@ -23,6 +24,7 @@ router.use(requireAdmin);
 router.get('/users', listUsers);
 router.get('/deposits', listDepositRequests);
 router.post('/deposits/:id/approve', approveDeposit);
+router.post('/deposits/:id/reject', rejectDeposit);
 router.get('/withdraws', listWithdrawRequests);
 router.get('/withdraw/:id', getWithdrawDetails);
 router.post('/withdraws/:id/approve', approveWithdraw);

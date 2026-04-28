@@ -5,7 +5,7 @@ const UserPlan = require('../models/userPlan.model');
 const { createTransaction } = require('./transaction.service');
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
-const createDepositRequest = async ({ userId, provider, amount, planId, transactionId, accountDetails, receiptUrl }) => {
+const createDepositRequest = async ({ userId, provider, amount, planId, transactionId, accountDetails, accountName, receiptUrl }) => {
   const deposit = new DepositRequest({
     user: userId,
     provider,
@@ -13,6 +13,7 @@ const createDepositRequest = async ({ userId, provider, amount, planId, transact
     plan: planId || null,
     transactionId,
     accountDetails,
+    accountName,
     receiptUrl
   });
   return deposit.save();
@@ -26,7 +27,9 @@ const getDepositRequests = async (filter = {}) => {
 };
 
 const getUserDepositRequests = async (userId) => {
-  return DepositRequest.find({ user: userId }).sort({ createdAt: -1 });
+  return DepositRequest.find({ user: userId })
+    .populate('plan', 'invest daily')
+    .sort({ createdAt: -1 });
 };
 
 const approveDepositRequest = async (depositId) => {
@@ -84,9 +87,30 @@ const approveDepositRequest = async (depositId) => {
   return request;
 };
 
+const rejectDepositRequest = async (depositId) => {
+  const request = await DepositRequest.findById(depositId);
+  if (!request) {
+    const err = new Error('Deposit request not found');
+    err.status = 404;
+    throw err;
+  }
+  if (request.status !== 'pending') {
+    const err = new Error('Only pending requests can be rejected');
+    err.status = 400;
+    throw err;
+  }
+
+  request.status = 'rejected';
+  request.rejectedAt = new Date();
+  await request.save();
+
+  return request;
+};
+
 module.exports = {
   createDepositRequest,
   getDepositRequests,
   getUserDepositRequests,
-  approveDepositRequest
+  approveDepositRequest,
+  rejectDepositRequest
 };

@@ -18,6 +18,11 @@ const withdrawRequestSchema = new Schema({
     required: true,
     trim: true
   },
+  accountName: {
+    type: String,
+    required: true,
+    trim: true
+  },
   paymentMethod: {
     type: String,
     required: true,

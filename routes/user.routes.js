@@ -57,6 +57,7 @@ router.post('/:id/deposit-request', upload.single('receipt'), createDepositReque
 router.post('/:id/withdraw-request', createWithdrawRequest);
 router.get('/:id/transactions', getUserTransactions);
 router.get('/:id/deposits', getUserDepositRequests);
+router.get('/:id/deposit-requests', getUserDepositRequests);
 router.get('/:id/withdraws', getUserWithdrawRequests);
 router.post('/:id/plans', buyPlan);
 router.get('/:id/plans', getRunningPlans);

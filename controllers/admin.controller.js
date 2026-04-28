@@ -1,6 +1,7 @@
 const {
   getDepositRequests,
-  approveDepositRequest
+  approveDepositRequest,
+  rejectDepositRequest
 } = require('../services/deposit.service');
 const {
   getWithdrawRequests,
@@ -28,6 +29,15 @@ const listDepositRequests = async (req, res, next) => {
 const approveDeposit = async (req, res, next) => {
   try {
     const deposit = await approveDepositRequest(req.params.id);
+    res.json({ success: true, data: deposit });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const rejectDeposit = async (req, res, next) => {
+  try {
+    const deposit = await rejectDepositRequest(req.params.id);
     res.json({ success: true, data: deposit });
   } catch (err) {
     next(err);
@@ -140,6 +150,7 @@ module.exports = {
   listUsers,
   listDepositRequests,
   approveDeposit,
+  rejectDeposit,
   listWithdrawRequests,
   getWithdrawDetails,
   approveWithdraw,

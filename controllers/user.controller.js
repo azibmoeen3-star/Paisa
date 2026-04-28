@@ -49,7 +49,7 @@ const getUser = async (req, res, next) => {
 
 const createDepositRequestHandler = async (req, res, next) => {
   try {
-    const { provider, amount, transactionId, accountDetails, planId } = req.body;
+    const { provider, amount, transactionId, accountDetails, accountName, planId } = req.body;
     let receiptUrl = null;
 
     if (req.file) {
@@ -78,6 +78,7 @@ const createDepositRequestHandler = async (req, res, next) => {
       planId,
       transactionId,
       accountDetails,
+      accountName,
       receiptUrl
     });
 
@@ -89,12 +90,12 @@ const createDepositRequestHandler = async (req, res, next) => {
 
 const createWithdrawRequestHandler = async (req, res, next) => {
   try {
-    const { amount, accountDetails, paymentMethod } = req.body;
+    const { amount, accountDetails, accountName, paymentMethod } = req.body;
 
-    if (!amount || !accountDetails || !paymentMethod) {
+    if (!amount || !accountDetails || !accountName || !paymentMethod) {
       return res.status(400).json({
         success: false,
-        message: 'Withdraw amount, account details, and payment method are required'
+        message: 'Withdraw amount, account name, account details, and payment method are required'
       });
     }
 
@@ -102,6 +103,7 @@ const createWithdrawRequestHandler = async (req, res, next) => {
       userId: req.params.id,
       amount: Number(amount),
       accountDetails,
+      accountName,
       paymentMethod
     });
 

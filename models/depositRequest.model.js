@@ -31,6 +31,11 @@ const depositRequestSchema = new Schema({
     type: String,
     trim: true
   },
+  accountName: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   receiptUrl: {
     type: String,
     default: null

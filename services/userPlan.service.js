@@ -7,30 +7,48 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 const processMaturedPlans = async (userId) => {
   const filter = {
-    payoutCredited: false,
     payoutAt: { $lte: new Date() }
   };
   if (userId) {
     filter.user = userId;
   }
 
-  const maturedPlans = await UserPlan.find(filter);
+  const maturedPlans = await UserPlan.find(filter).select('_id user daily payoutAt');
   for (const userPlan of maturedPlans) {
-    const user = await User.findById(userPlan.user);
-    if (!user) continue;
+    const now = Date.now();
+    const originalPayoutAt = new Date(userPlan.payoutAt);
+    const nextPayoutAtMs = originalPayoutAt.getTime();
+    const cyclesDue = Math.floor((now - nextPayoutAtMs) / DAY_IN_MS) + 1;
+    const payoutCycles = Math.max(1, cyclesDue);
+    const totalPayout = Number(userPlan.daily) * payoutCycles;
+    const updatedPayoutAt = new Date(nextPayoutAtMs + payoutCycles * DAY_IN_MS);
 
-    user.money += userPlan.daily;
-    await user.save();
+    // Prevent duplicate credits when multiple requests process payouts together.
+    const claimedPlan = await UserPlan.findOneAndUpdate(
+      { _id: userPlan._id, payoutAt: originalPayoutAt },
+      {
+        $set: {
+          payoutAt: updatedPayoutAt,
+          payoutCredited: true,
+          creditedAt: new Date()
+        }
+      },
+      { new: true }
+    );
+    if (!claimedPlan) continue;
 
-    userPlan.payoutCredited = true;
-    userPlan.creditedAt = new Date();
-    await userPlan.save();
+    const updatedUser = await User.findByIdAndUpdate(
+      userPlan.user,
+      { $inc: { money: totalPayout } },
+      { new: true }
+    );
+    if (!updatedUser) continue;
 
     await createTransaction({
-      userId: user._id,
+      userId: updatedUser._id,
       type: 'plan_payout',
-      amount: userPlan.daily,
-      balanceAfter: user.money
+      amount: totalPayout,
+      balanceAfter: updatedUser.money
     });
   }
 };

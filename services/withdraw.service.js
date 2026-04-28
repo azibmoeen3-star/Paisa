@@ -2,7 +2,7 @@ const WithdrawRequest = require('../models/withdrawRequest.model');
 const User = require('../models/user.model');
 const { createTransaction } = require('./transaction.service');
 
-const createWithdrawRequest = async ({ userId, amount, accountDetails, paymentMethod, receiptUrl }) => {
+const createWithdrawRequest = async ({ userId, amount, accountDetails, accountName, paymentMethod, receiptUrl }) => {
   const user = await User.findById(userId);
   if (!user) {
     const err = new Error('User not found');
@@ -26,6 +26,7 @@ const createWithdrawRequest = async ({ userId, amount, accountDetails, paymentMe
     user: userId,
     amount,
     accountDetails,
+    accountName,
     paymentMethod,
     receiptUrl
   });
