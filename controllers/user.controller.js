@@ -115,8 +115,45 @@ const createWithdrawRequestHandler = async (req, res, next) => {
 
 const getUserTransactionsHandler = async (req, res, next) => {
   try {
-    const transactions = await getTransactionsForUser(req.params.id);
-    res.json({ success: true, data: transactions });
+    const [transactions, depositRequests, withdrawRequests] = await Promise.all([
+      getTransactionsForUser(req.params.id),
+      getUserDepositRequests(req.params.id),
+      getUserWithdrawRequests(req.params.id)
+    ]);
+
+    const pendingRequests = [
+      ...depositRequests
+        .filter((request) => request.status === 'pending')
+        .map((request) => ({
+          _id: request._id,
+          type: 'deposit',
+          amount: request.amount,
+          createdAt: request.createdAt,
+          status: request.status,
+          provider: request.provider,
+          transactionId: request.transactionId,
+          accountDetails: request.accountDetails,
+          accountName: request.accountName
+        })),
+      ...withdrawRequests
+        .filter((request) => request.status === 'pending')
+        .map((request) => ({
+          _id: request._id,
+          type: 'withdraw',
+          amount: request.amount,
+          createdAt: request.createdAt,
+          status: request.status,
+          paymentMethod: request.paymentMethod,
+          accountDetails: request.accountDetails,
+          accountName: request.accountName
+        }))
+    ];
+
+    const combinedTransactions = [...pendingRequests, ...transactions].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    res.json({ success: true, data: combinedTransactions });
   } catch (err) {
     next(err);
   }
